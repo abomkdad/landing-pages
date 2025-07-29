@@ -1,12 +1,146 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <title>لوحة تحكم - صفحات الهبوط</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة التحكم - إنشاء صفحة هبوط</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+  <style>
+    body { font-family: sans-serif; padding: 30px; background: #f2f2f2; color: #333; direction: rtl; }
+    h1, h2 { text-align: center; }
+    label { margin-top: 10px; display: block; }
+    input, textarea, select, button {
+      width: 100%; padding: 10px; margin: 8px 0 16px;
+      border: 1px solid #ccc; border-radius: 4px; font-size: 16px;
+    }
+    button { background: #28a745; color: white; border: none; cursor: pointer; }
+    button:hover { opacity: 0.9; }
+    .box { background: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 0 10px #ccc; }
+    iframe { width: 100%; height: 500px; border: 1px solid #ccc; }
+    .note { font-size: 12px; color: #777; margin-top: -12px; }
+  </style>
 </head>
 <body>
-  <h1>مرحباً بك في لوحة التحكم</h1>
-  <p>يتم رفع الصفحات إلى GitHub تلقائياً.</p>
+  <h1>لوحة التحكم - إنشاء صفحة هبوط</h1>
+  <div class="box">
+    <label>اسم الصفحة (مثل: summer24):</label>
+    <input type="text" id="pageName" placeholder="summer24">
+
+    <label>النص الترحيبي:</label>
+    <textarea id="introText" rows="2">👋 مرحباً بك في عرضنا!</textarea>
+
+    <label>كرسول 1 (روابط مفصولة بفواصل):</label>
+    <textarea id="carousel1" rows="2">https://link1.jpg, https://link2.jpg</textarea>
+
+    <label>كرسول 2 (روابط مفصولة بفواصل):</label>
+    <textarea id="carousel2" rows="2"></textarea>
+
+    <label>كرسول 3 (روابط مفصولة بفواصل):</label>
+    <textarea id="carousel3" rows="2"></textarea>
+
+    <label>رابط فيديو (اختياري):</label>
+    <input type="text" id="videoUrl" placeholder="https://www.youtube.com/embed/...">
+
+    <label>رقم واتساب:</label>
+    <input type="text" id="whatsappNumber" placeholder="9725XXXXXXXX">
+
+    <label>رسالة واتساب:</label>
+    <textarea id="whatsappMsg" rows="2">مرحباً، أؤكد طلبي 🌸</textarea>
+
+    <label>لغة الصفحة:</label>
+    <select id="lang">
+      <option value="ar">عربي</option>
+      <option value="he">عبري</option>
+    </select>
+
+    <label>Meta Pixel ID:</label>
+    <input type="text" id="metaPixel" placeholder="مثال: 123456789">
+
+    <label>TikTok Pixel ID:</label>
+    <input type="text" id="tiktokPixel" placeholder="مثال: TT-XXXXXXX">
+
+    <label>GitHub Token:</label>
+    <input type="password" id="githubToken" placeholder="ghp_...">
+
+    <label>اسم الريبو (مثل: abomkdad/landing-pages):</label>
+    <input type="text" id="repoName">
+
+    <button onclick="generateAndUpload()">🚀 إنشاء ورفع الصفحة</button>
+  </div>
+
+  <iframe id="preview"></iframe>
+
+  <script>
+    async function generateAndUpload() {
+      const name = document.getElementById('pageName').value.trim();
+      const intro = document.getElementById('introText').value;
+      const carousel1 = document.getElementById('carousel1').value.split(',').map(x => x.trim());
+      const carousel2 = document.getElementById('carousel2').value.split(',').map(x => x.trim());
+      const carousel3 = document.getElementById('carousel3').value.split(',').map(x => x.trim());
+      const video = document.getElementById('videoUrl').value;
+      const wa = document.getElementById('whatsappNumber').value;
+      const msg = encodeURIComponent(document.getElementById('whatsappMsg').value);
+      const lang = document.getElementById('lang').value;
+      const meta = document.getElementById('metaPixel').value;
+      const tiktok = document.getElementById('tiktokPixel').value;
+      const token = document.getElementById('githubToken').value;
+      const repo = document.getElementById('repoName').value;
+
+      if (!name || !wa || !token || !repo) return alert('يرجى ملء كل الحقول الأساسية');
+
+      let html = `<!DOCTYPE html><html lang="${lang}" dir="rtl">
+      <head><meta charset="UTF-8"><title>${name}</title>
+      <script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod? 
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n; 
+      n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e); 
+      t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0]; 
+      s.parentNode.insertBefore(t,s)}(window, document,'script', 
+      'https://connect.facebook.net/en_US/fbevents.js');fbq('init', '${meta}');fbq('track', 'PageView');</script>
+      <script>!function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[]; 
+      ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"], 
+      ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}; 
+      for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]); 
+      ttq.load=function(e){var n=d.createElement("script");n.type="text/javascript",n.async=!0,n.src="https://analytics.tiktok.com/i18n/pixel/events.js?sdkid="+e+"&lib=ttq"; 
+      var a=d.getElementsByTagName("script")[0];a.parentNode.insertBefore(n,a)}; 
+      ttq.load("${tiktok}");ttq.page();}(window, document, 'ttq');</script>
+      </head>
+      <body><h1>${intro}</h1>`;
+
+      function renderCarousel(images) {
+        if (images.length === 0 || !images[0]) return '';
+        return `<div>${images.map(src => `<img src="${src}" style="width:100%;max-width:300px;margin:5px;">`).join('')}</div>`;
+      }
+
+      html += renderCarousel(carousel1) + renderCarousel(carousel2) + renderCarousel(carousel3);
+
+      if (video) html += `<iframe src="${video}" style="width:100%;height:300px;"></iframe>`;
+      html += `<form onsubmit="fbq('track', 'Purchase'); ttq.track('CompletePayment'); window.open('https://wa.me/${wa}?text=${msg}', '_blank'); return false;">
+      <input placeholder="الاسم" required><input placeholder="الهاتف" required><input placeholder="العنوان"><button type="submit">تأكيد الطلب عبر واتساب</button></form>`;
+      html += `<script src="https://cdn.userway.org/widget.js" data-account="XXXXXX"></script>`;
+      html += `</body></html>`;
+
+      const encoded = btoa(unescape(encodeURIComponent(html)));
+      const url = `https://api.github.com/repos/${repo}/contents/${name}.html`;
+
+      const res = await fetch(url, {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          message: `create ${name}.html`,
+          content: encoded
+        })
+      });
+
+      if (res.ok) {
+        document.getElementById('preview').srcdoc = html;
+        alert("✅ تم رفع الصفحة بنجاح")
+      } else {
+        alert("❌ فشل في رفع الصفحة إلى GitHub")
+      }
+    }
+  </script>
 </body>
 </html>
