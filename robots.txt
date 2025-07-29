@@ -1,0 +1,2 @@
+User-agent: *
+Sitemap: https://store.jeninpack.com/pixel/?app=page.sitemap

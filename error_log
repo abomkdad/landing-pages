@@ -1,0 +1,14 @@
+[13-Jan-2025 21:54:50 Asia/Jerusalem] PHP Warning:  Cannot modify header information - headers already sent by (output started at /home/jeniovir/pixel.jeninpack.com/app/page/siteOper/test.php:1) in /home/jeniovir/pixel.jeninpack.com/app/system/site.php on line 14
+[13-Jan-2025 22:44:58 Asia/Jerusalem] PHP Warning:  Cannot modify header information - headers already sent by (output started at /home/jeniovir/pixel.jeninpack.com/app/page/siteOper/test.php:1) in /home/jeniovir/pixel.jeninpack.com/app/system/site.php on line 14
+[15-Jan-2025 23:14:40 Asia/Jerusalem] PHP Warning:  Cannot modify header information - headers already sent by (output started at /home/jeniovir/store.jeninpack.com/pixel/app/page/siteOper/test.php:1) in /home/jeniovir/store.jeninpack.com/pixel/app/system/site.php on line 14
+[15-Jan-2025 23:17:21 Asia/Jerusalem] PHP Warning:  Cannot modify header information - headers already sent by (output started at /home/jeniovir/store.jeninpack.com/pixel/app/page/siteOper/test.php:1) in /home/jeniovir/store.jeninpack.com/pixel/app/system/site.php on line 14
+[15-Jan-2025 23:17:36 Asia/Jerusalem] PHP Warning:  Cannot modify header information - headers already sent by (output started at /home/jeniovir/store.jeninpack.com/pixel/app/page/siteOper/test.php:1) in /home/jeniovir/store.jeninpack.com/pixel/app/system/site.php on line 14
+[15-Jan-2025 23:18:10 Asia/Jerusalem] PHP Warning:  Cannot modify header information - headers already sent by (output started at /home/jeniovir/store.jeninpack.com/pixel/app/page/siteOper/test.php:5) in /home/jeniovir/store.jeninpack.com/pixel/app/system/site.php on line 14
+[16-Jan-2025 22:38:40 Asia/Jerusalem] PHP Fatal error:  Uncaught Error: Call to a member function queryAndFetchArray() on null in /home/jeniovir/store.jeninpack.com/pixel/app/page/siteOper/show.php:30
+Stack trace:
+#0 /home/jeniovir/store.jeninpack.com/pixel/license.php(160): require_once()
+#1 /home/jeniovir/store.jeninpack.com/pixel/index.php(12): require_once('/home/jeniovir/...')
+#2 {main}
+  thrown in /home/jeniovir/store.jeninpack.com/pixel/app/page/siteOper/show.php on line 30
+[17-Jan-2025 16:04:43 Asia/Jerusalem] PHP Parse error:  syntax error, unexpected end of file in /home/jeniovir/store.jeninpack.com/pixel/app/page/siteOper/show.php on line 102
+[17-Jan-2025 16:04:46 Asia/Jerusalem] PHP Parse error:  syntax error, unexpected end of file in /home/jeniovir/store.jeninpack.com/pixel/app/page/siteOper/show.php on line 102
