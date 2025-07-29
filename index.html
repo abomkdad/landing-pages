@@ -1,146 +1,463 @@
 <!DOCTYPE html>
+<!--
+  admin.html
+
+  This page acts as a simple dashboard for generating multilingual landing pages entirely
+  on the client side. It allows a user to enter the necessary content for a landing
+  page (carousel images, text, optional video, WhatsApp number, and order form
+  placeholders) and automatically generates an HTML file using JavaScript. The file
+  can then be uploaded to a GitHub repository via the GitHub API.
+
+  The interface supports Arabic and Hebrew (right‑to‑left) layouts. A basic login
+  mechanism is implemented using a password stored in the browser's localStorage.
+
+  Note: For security, do not hardcode your GitHub personal access token in this file.
+  Instead, input it manually when prompted and store it locally in your browser.
+-->
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لوحة التحكم - إنشاء صفحة هبوط</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>لوحة التحكم لإنشاء صفحات الهبوط</title>
+  <!-- Bootstrap 5 via CDN for quick styling -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-VmUTyNHV5jY8Y3DiDYEFBOQf9RqDQbO97nZksl/Gsjb8WJwbmfl5Jb4gBO4tPKyz" crossorigin="anonymous">
   <style>
-    body { font-family: sans-serif; padding: 30px; background: #f2f2f2; color: #333; direction: rtl; }
-    h1, h2 { text-align: center; }
-    label { margin-top: 10px; display: block; }
-    input, textarea, select, button {
-      width: 100%; padding: 10px; margin: 8px 0 16px;
-      border: 1px solid #ccc; border-radius: 4px; font-size: 16px;
+    body {
+      padding: 2rem;
+      font-family: sans-serif;
     }
-    button { background: #28a745; color: white; border: none; cursor: pointer; }
-    button:hover { opacity: 0.9; }
-    .box { background: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 0 10px #ccc; }
-    iframe { width: 100%; height: 500px; border: 1px solid #ccc; }
-    .note { font-size: 12px; color: #777; margin-top: -12px; }
+    #login-container {
+      max-width: 400px;
+      margin: auto;
+      display: none;
+    }
+    #admin-container {
+      display: none;
+    }
+    /* Style for carousel image inputs */
+    .carousel-image-input {
+      margin-bottom: 0.5rem;
+    }
+    #preview-container iframe {
+      width: 100%;
+      height: 600px;
+      border: 1px solid #ddd;
+    }
   </style>
 </head>
 <body>
-  <h1>لوحة التحكم - إنشاء صفحة هبوط</h1>
-  <div class="box">
-    <label>اسم الصفحة (مثل: summer24):</label>
-    <input type="text" id="pageName" placeholder="summer24">
-
-    <label>النص الترحيبي:</label>
-    <textarea id="introText" rows="2">👋 مرحباً بك في عرضنا!</textarea>
-
-    <label>كرسول 1 (روابط مفصولة بفواصل):</label>
-    <textarea id="carousel1" rows="2">https://link1.jpg, https://link2.jpg</textarea>
-
-    <label>كرسول 2 (روابط مفصولة بفواصل):</label>
-    <textarea id="carousel2" rows="2"></textarea>
-
-    <label>كرسول 3 (روابط مفصولة بفواصل):</label>
-    <textarea id="carousel3" rows="2"></textarea>
-
-    <label>رابط فيديو (اختياري):</label>
-    <input type="text" id="videoUrl" placeholder="https://www.youtube.com/embed/...">
-
-    <label>رقم واتساب:</label>
-    <input type="text" id="whatsappNumber" placeholder="9725XXXXXXXX">
-
-    <label>رسالة واتساب:</label>
-    <textarea id="whatsappMsg" rows="2">مرحباً، أؤكد طلبي 🌸</textarea>
-
-    <label>لغة الصفحة:</label>
-    <select id="lang">
-      <option value="ar">عربي</option>
-      <option value="he">عبري</option>
-    </select>
-
-    <label>Meta Pixel ID:</label>
-    <input type="text" id="metaPixel" placeholder="مثال: 123456789">
-
-    <label>TikTok Pixel ID:</label>
-    <input type="text" id="tiktokPixel" placeholder="مثال: TT-XXXXXXX">
-
-    <label>GitHub Token:</label>
-    <input type="password" id="githubToken" placeholder="ghp_...">
-
-    <label>اسم الريبو (مثل: abomkdad/landing-pages):</label>
-    <input type="text" id="repoName">
-
-    <button onclick="generateAndUpload()">🚀 إنشاء ورفع الصفحة</button>
+  <!-- Login section -->
+  <div id="login-container" class="card shadow">
+    <div class="card-body">
+      <h3 class="card-title mb-3 text-center">تسجيل الدخول</h3>
+      <div class="mb-3">
+        <label for="login-password" class="form-label">كلمة المرور</label>
+        <input type="password" id="login-password" class="form-control" placeholder="أدخل كلمة المرور">
+      </div>
+      <button id="login-button" class="btn btn-primary w-100">دخول</button>
+    </div>
   </div>
 
-  <iframe id="preview"></iframe>
+  <!-- Administration section -->
+  <div id="admin-container" class="container">
+    <h2 class="mb-4">إنشاء صفحة هبوط جديدة</h2>
+    <!-- Page name -->
+    <div class="mb-3">
+      <label for="page-name" class="form-label">اسم الصفحة (بالإنجليزية فقط)</label>
+      <input type="text" id="page-name" class="form-control" placeholder="مثال: sale1">
+    </div>
+    <!-- Language selector -->
+    <div class="mb-3">
+      <label for="language-select" class="form-label">اختر اللغة</label>
+      <select id="language-select" class="form-select">
+        <option value="ar">العربية</option>
+        <option value="he">العبرية</option>
+      </select>
+    </div>
+    <!-- Carousel images inputs -->
+    <div class="mb-3">
+      <label class="form-label">صور الكرسول</label>
+      <div id="carousel-images"></div>
+      <button id="add-image-field" class="btn btn-outline-secondary btn-sm">إضافة صورة للكرسول</button>
+    </div>
+    <!-- Page content -->
+    <div class="mb-3">
+      <label for="page-content" class="form-label">محتوى الصفحة</label>
+      <textarea id="page-content" class="form-control" rows="6" placeholder="أدخل نص الصفحة هنا..."></textarea>
+    </div>
+    <!-- Video URL -->
+    <div class="mb-3">
+      <label for="video-url" class="form-label">رابط الفيديو (اختياري)</label>
+      <input type="text" id="video-url" class="form-control" placeholder="https://www.youtube.com/embed/...">
+    </div>
+    <!-- WhatsApp number -->
+    <div class="mb-3">
+      <label for="whatsapp-number" class="form-label">رقم واتساب (مع كود الدولة)</label>
+      <input type="text" id="whatsapp-number" class="form-control" placeholder="مثال: +972500000000">
+    </div>
+    <!-- Order form placeholders -->
+    <div class="mb-3">
+      <h5>حقول نموذج الطلب (Placeholder)</h5>
+      <input type="text" id="placeholder-name" class="form-control mb-2" placeholder="الاسم الكامل">
+      <input type="text" id="placeholder-phone" class="form-control mb-2" placeholder="رقم الهاتف">
+      <input type="text" id="placeholder-address" class="form-control mb-2" placeholder="العنوان">
+    </div>
+    <!-- GitHub settings -->
+    <div class="mb-3">
+      <h5>بيانات GitHub</h5>
+      <input type="text" id="github-repo" class="form-control mb-2" placeholder="المالك/اسم الريبو (owner/repository)">
+      <input type="password" id="github-token" class="form-control mb-2" placeholder="GitHub Personal Access Token">
+    </div>
+    <!-- Action buttons -->
+    <div class="mb-3">
+      <button id="preview-button" class="btn btn-info me-2">معاينة</button>
+      <button id="create-button" class="btn btn-success">إنشاء الصفحة ورفعها</button>
+    </div>
+    <!-- Preview container -->
+    <div id="preview-container" class="mt-4"></div>
+  </div>
 
+  <!-- JavaScript -->
   <script>
-    async function generateAndUpload() {
-      const name = document.getElementById('pageName').value.trim();
-      const intro = document.getElementById('introText').value;
-      const carousel1 = document.getElementById('carousel1').value.split(',').map(x => x.trim());
-      const carousel2 = document.getElementById('carousel2').value.split(',').map(x => x.trim());
-      const carousel3 = document.getElementById('carousel3').value.split(',').map(x => x.trim());
-      const video = document.getElementById('videoUrl').value;
-      const wa = document.getElementById('whatsappNumber').value;
-      const msg = encodeURIComponent(document.getElementById('whatsappMsg').value);
-      const lang = document.getElementById('lang').value;
-      const meta = document.getElementById('metaPixel').value;
-      const tiktok = document.getElementById('tiktokPixel').value;
-      const token = document.getElementById('githubToken').value;
-      const repo = document.getElementById('repoName').value;
+    (function() {
+      /**
+       * Simple login: checks password against a value stored in localStorage. If
+       * there is no stored password, the first password entered becomes the new
+       * one. This provides a very basic level of protection suitable for a
+       * personal dashboard. For production systems, consider a more secure
+       * authentication mechanism.
+       */
+      const loginContainer = document.getElementById('login-container');
+      const adminContainer = document.getElementById('admin-container');
+      const loginButton = document.getElementById('login-button');
+      const loginPasswordInput = document.getElementById('login-password');
 
-      if (!name || !wa || !token || !repo) return alert('يرجى ملء كل الحقول الأساسية');
-
-      let html = `<!DOCTYPE html><html lang="${lang}" dir="rtl">
-      <head><meta charset="UTF-8"><title>${name}</title>
-      <script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod? 
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n; 
-      n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e); 
-      t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0]; 
-      s.parentNode.insertBefore(t,s)}(window, document,'script', 
-      'https://connect.facebook.net/en_US/fbevents.js');fbq('init', '${meta}');fbq('track', 'PageView');</script>
-      <script>!function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[]; 
-      ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"], 
-      ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}; 
-      for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]); 
-      ttq.load=function(e){var n=d.createElement("script");n.type="text/javascript",n.async=!0,n.src="https://analytics.tiktok.com/i18n/pixel/events.js?sdkid="+e+"&lib=ttq"; 
-      var a=d.getElementsByTagName("script")[0];a.parentNode.insertBefore(n,a)}; 
-      ttq.load("${tiktok}");ttq.page();}(window, document, 'ttq');</script>
-      </head>
-      <body><h1>${intro}</h1>`;
-
-      function renderCarousel(images) {
-        if (images.length === 0 || !images[0]) return '';
-        return `<div>${images.map(src => `<img src="${src}" style="width:100%;max-width:300px;margin:5px;">`).join('')}</div>`;
+      function showLogin() {
+        loginContainer.style.display = 'block';
+        adminContainer.style.display = 'none';
       }
 
-      html += renderCarousel(carousel1) + renderCarousel(carousel2) + renderCarousel(carousel3);
+      function showAdmin() {
+        loginContainer.style.display = 'none';
+        adminContainer.style.display = 'block';
+      }
 
-      if (video) html += `<iframe src="${video}" style="width:100%;height:300px;"></iframe>`;
-      html += `<form onsubmit="fbq('track', 'Purchase'); ttq.track('CompletePayment'); window.open('https://wa.me/${wa}?text=${msg}', '_blank'); return false;">
-      <input placeholder="الاسم" required><input placeholder="الهاتف" required><input placeholder="العنوان"><button type="submit">تأكيد الطلب عبر واتساب</button></form>`;
-      html += `<script src="https://cdn.userway.org/widget.js" data-account="XXXXXX"></script>`;
-      html += `</body></html>`;
+      function checkLogin() {
+        const storedPassword = localStorage.getItem('landingPagePassword');
+        if (storedPassword) {
+          // Prompt for password
+          showLogin();
+        } else {
+          // No password set; ask user to set one on first use
+          const newPass = prompt('لم يتم تعيين كلمة مرور بعد، الرجاء تعيين واحدة الآن:');
+          if (newPass) {
+            localStorage.setItem('landingPagePassword', newPass);
+            showLogin();
+          } else {
+            alert('يجب تعيين كلمة مرور للاستمرار.');
+          }
+        }
+      }
 
-      const encoded = btoa(unescape(encodeURIComponent(html)));
-      const url = `https://api.github.com/repos/${repo}/contents/${name}.html`;
-
-      const res = await fetch(url, {
-        method: "PUT",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          message: `create ${name}.html`,
-          content: encoded
-        })
+      loginButton.addEventListener('click', () => {
+        const storedPassword = localStorage.getItem('landingPagePassword');
+        const entered = loginPasswordInput.value;
+        if (entered === storedPassword) {
+          localStorage.setItem('landingPageLoggedIn', 'true');
+          showAdmin();
+        } else {
+          alert('كلمة المرور غير صحيحة');
+        }
       });
 
-      if (res.ok) {
-        document.getElementById('preview').srcdoc = html;
-        alert("✅ تم رفع الصفحة بنجاح")
-      } else {
-        alert("❌ فشل في رفع الصفحة إلى GitHub")
+      // Check login status on load
+      document.addEventListener('DOMContentLoaded', () => {
+        const loggedIn = localStorage.getItem('landingPageLoggedIn') === 'true';
+        if (loggedIn) {
+          showAdmin();
+        } else {
+          checkLogin();
+        }
+      });
+
+      // Dynamic addition of carousel image fields
+      const carouselContainer = document.getElementById('carousel-images');
+      const addImageFieldBtn = document.getElementById('add-image-field');
+      let imageFieldCount = 0;
+      function addImageField(defaultValue = '') {
+        imageFieldCount++;
+        const div = document.createElement('div');
+        div.className = 'carousel-image-input input-group';
+        div.innerHTML = `<input type="text" class="form-control" placeholder="رابط الصورة ${imageFieldCount}" value="${defaultValue}">
+                         <button class="btn btn-outline-danger remove-image-field" type="button">حذف</button>`;
+        // Handle removal
+        div.querySelector('.remove-image-field').addEventListener('click', () => {
+          carouselContainer.removeChild(div);
+        });
+        carouselContainer.appendChild(div);
       }
-    }
+      // Initialize with three image fields by default
+      for (let i = 0; i < 3; i++) {
+        addImageField();
+      }
+      addImageFieldBtn.addEventListener('click', () => addImageField());
+
+      /**
+       * Generates the HTML content for the landing page based on the form
+       * inputs. Returns an object with html (string) and a simple title for
+       * display.
+       */
+      function generateLandingHTML() {
+        const pageName = document.getElementById('page-name').value.trim();
+        const lang = document.getElementById('language-select').value;
+        const dir = 'rtl'; // both Arabic and Hebrew are RTL
+        const images = Array.from(carouselContainer.querySelectorAll('input')).map(i => i.value.trim()).filter(Boolean);
+        const content = document.getElementById('page-content').value;
+        const videoURL = document.getElementById('video-url').value.trim();
+        const whatsappNumber = document.getElementById('whatsapp-number').value.trim();
+        const placeholderName = document.getElementById('placeholder-name').value.trim() || 'الاسم';
+        const placeholderPhone = document.getElementById('placeholder-phone').value.trim() || 'الهاتف';
+        const placeholderAddress = document.getElementById('placeholder-address').value.trim() || 'العنوان';
+
+        // Build carousel HTML using Bootstrap Carousel component
+        const carouselId = 'carouselExampleIndicators';
+        const indicators = images.map((_, idx) => `<button type="button" data-bs-target="#${carouselId}" data-bs-slide-to="${idx}" ${idx === 0 ? 'class="active" aria-current="true"' : ''} aria-label="Slide ${idx + 1}"></button>`).join('');
+        const slides = images.map((img, idx) => `<div class="carousel-item${idx === 0 ? ' active' : ''}"><img src="${img}" class="d-block w-100" alt="slide ${idx + 1}"></div>`).join('');
+        const carouselHTML = `
+        <div id="${carouselId}" class="carousel slide" data-bs-ride="carousel">
+          <div class="carousel-indicators">
+            ${indicators}
+          </div>
+          <div class="carousel-inner">
+            ${slides}
+          </div>
+          <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">السابق</span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">التالي</span>
+          </button>
+        </div>`;
+
+        // Video embed if provided
+        const videoHTML = videoURL ? `<div class="ratio ratio-16x9 mb-4"><iframe src="${videoURL}" title="Video" allowfullscreen></iframe></div>` : '';
+
+        // Order form and WhatsApp button. We'll include a script to capture form data and open WhatsApp link.
+        const formHTML = `
+        <form id="order-form" class="mb-4">
+          <div class="mb-3">
+            <input type="text" class="form-control" name="customerName" placeholder="${placeholderName}" required>
+          </div>
+          <div class="mb-3">
+            <input type="tel" class="form-control" name="customerPhone" placeholder="${placeholderPhone}" required>
+          </div>
+          <div class="mb-3">
+            <input type="text" class="form-control" name="customerAddress" placeholder="${placeholderAddress}" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">تأكيد الطلب</button>
+        </form>
+        <script>
+          document.getElementById('order-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const name = formData.get('customerName');
+            const phone = formData.get('customerPhone');
+            const address = formData.get('customerAddress');
+            // Build WhatsApp message
+            const message = encodeURIComponent('طلب جديد:\\nالاسم: ' + name + '\\nالهاتف: ' + phone + '\\nالعنوان: ' + address);
+            const waLink = 'https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=' + message;
+            // Fire tracking pixels
+            if (typeof fbq === 'function') {
+              fbq('track', 'CompleteRegistration');
+            }
+            if (typeof ttq === 'object' && ttq.track) {
+              ttq.track('CompletePayment');
+            }
+            window.open(waLink, '_blank');
+          });
+        </script>
+        `;
+
+        // Meta and TikTok Pixel placeholders (user should replace IDs)
+        const pixelScripts = `
+        <!-- Facebook Meta Pixel -->
+        <script>
+          !function(f,b,e,v,n,t,s)
+          {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+          n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+          if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+          n.queue=[];t=b.createElement(e);t.async=!0;
+          t.src=v;s=b.getElementsByTagName(e)[0];
+          s.parentNode.insertBefore(t,s)}(window, document,'script',
+          'https://connect.facebook.net/en_US/fbevents.js');
+          fbq('init', 'YOUR_META_PIXEL_ID');
+          fbq('track', 'PageView');
+        </script>
+        <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=YOUR_META_PIXEL_ID&ev=PageView&noscript=1"/></noscript>
+        <!-- TikTok Pixel -->
+        <script>
+          !function (w, d, t) {
+            w.TiktokAnalyticsObject = t;
+            var ttq = w[t] = w[t] || [];
+            ttq.methods = ['page', 'track', 'identify', 'instances', 'debug', 'on', 'off', 'once', 'ready', 'alias', 'group', 'enableCookie', 'disableCookie'],
+            ttq.setAndDefer = function (t, e) {
+              t[e] = function () {
+                t.push([e].concat(Array.prototype.slice.call(arguments, 0)))
+              }
+            };
+            for (var i = 0; i < ttq.methods.length; i++) ttq.setAndDefer(ttq, ttq.methods[i]);
+            ttq.instance = function (t) {
+              for (var e = ttq._i[t] || [], n = 0; n < ttq.methods.length; n++) ttq.setAndDefer(e, ttq.methods[n]);
+              return e
+            },
+            ttq.load = function (e, n) {
+              var i = 'https://analytics.tiktok.com/i18n/pixel/events.js';
+              ttq._i = ttq._i || {}, ttq._i[e] = [], ttq._i[e]._u = i, ttq._t = ttq._t || {}, ttq._t[e] = +new Date, ttq._o = ttq._o || {}, ttq._o[e] = n || {};
+              var o = document.createElement('script');
+              o.type = 'text/javascript', o.async = !0, o.src = i + '?sdkid=' + e + '&lib=' + t;
+              var a = document.getElementsByTagName('script')[0];
+              a.parentNode.insertBefore(o, a)
+            };
+            ttq.load('YOUR_TIKTOK_PIXEL_ID');
+            ttq.page();
+          }(window, document, 'ttq');
+        </script>
+        `;
+
+        // Accessibility widget (userway.org example)
+        const accessibilityScript = `
+        <script>
+          (function(d){
+            var s = d.createElement('script');
+            s.src = 'https://cdn.userway.org/widget.js';
+            s.defer = true;
+            s.setAttribute('data-account', 'YOUR_USERWAY_ACCOUNT_ID');
+            d.getElementsByTagName('head')[0].appendChild(s);
+          })(document);
+        </script>
+        `;
+
+        // Privacy and Terms pages (links will be inserted). These are static pages that will be created separately.
+        const legalLinks = `
+          <footer class="mt-4 text-center">
+            <a href="privacy.html">سياسة الخصوصية</a> | <a href="terms.html">الشروط والأحكام</a>
+          </footer>
+        `;
+
+        const html = `<!DOCTYPE html>
+<html lang="${lang}" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${pageName}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { padding: 1rem; font-family: sans-serif; }
+  </style>
+</head>
+<body>
+  ${carouselHTML}
+  <div class="my-4">
+    ${content}
+  </div>
+  ${videoHTML}
+  ${formHTML}
+  ${legalLinks}
+  ${pixelScripts}
+  ${accessibilityScript}
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>`;
+        return { html, title: pageName + '.html' };
+      }
+
+      // Function to preview the generated HTML inside an iframe
+      document.getElementById('preview-button').addEventListener('click', () => {
+        const { html } = generateLandingHTML();
+        const previewContainer = document.getElementById('preview-container');
+        previewContainer.innerHTML = '';
+        const iframe = document.createElement('iframe');
+        iframe.srcdoc = html;
+        iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+        previewContainer.appendChild(iframe);
+      });
+
+      /**
+       * Uploads the generated page (and legal pages if necessary) to GitHub
+       * using the GitHub Content API. Requires a personal access token with
+       * repo scope. The user must provide repository name (owner/repo) and token.
+       */
+      async function uploadFileToGitHub(path, content, repo, token, message) {
+        const apiUrl = `https://api.github.com/repos/${repo}/contents/${encodeURIComponent(path)}`;
+        // Check if file exists to fetch its SHA for update
+        let sha = undefined;
+        try {
+          const res = await fetch(apiUrl, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.status === 200) {
+            const data = await res.json();
+            sha = data.sha;
+          }
+        } catch (err) {
+          console.error('Error checking existing file', err);
+        }
+        // Encode content to base64
+        const encodedContent = btoa(unescape(encodeURIComponent(content)));
+        const body = {
+          message: message,
+          content: encodedContent,
+          sha: sha
+        };
+        const response = await fetch(apiUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        });
+        return response;
+      }
+
+      async function createLegalPagesIfNeeded(repo, token, lang) {
+        // Prepare content for privacy.html and terms.html
+        let privacyContent, termsContent;
+        if (lang === 'ar') {
+          privacyContent = `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>سياسة الخصوصية</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head><body class="p-4"><h1>سياسة الخصوصية</h1><p>نحن نحترم خصوصيتك ونلتزم بحماية بياناتك.</p></body></html>`;
+          termsContent = `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>الشروط والأحكام</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head><body class="p-4"><h1>الشروط والأحكام</h1><p>تخضع استخدامك لهذه الصفحة للشروط والأحكام التالية...</p></body></html>`;
+        } else {
+          // Hebrew placeholders
+          privacyContent = `<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>מדיניות פרטיות</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head><body class="p-4"><h1>מדיניות פרטיות</h1><p>אנו מכבדים את פרטיותך ומתחייבים להגן על הנתונים שלך.</p></body></html>`;
+          termsContent = `<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="utf-8"><title>תקנון ותנאי שימוש</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head><body class="p-4"><h1>תקנון ותנאי שימוש</h1><p>השימוש שלך בדף זה כפוף לתקנון ולתנאי השימוש הבאים...</p></body></html>`;
+        }
+        await uploadFileToGitHub('privacy.html', privacyContent, repo, token, 'Update privacy policy');
+        await uploadFileToGitHub('terms.html', termsContent, repo, token, 'Update terms of service');
+      }
+
+      document.getElementById('create-button').addEventListener('click', async () => {
+        const { html, title } = generateLandingHTML();
+        const repo = document.getElementById('github-repo').value.trim();
+        const token = document.getElementById('github-token').value.trim();
+        if (!repo || !token) {
+          alert('يرجى إدخال بيانات الريبو والتوكن');
+          return;
+        }
+        // upload main page
+        const response = await uploadFileToGitHub(title, html, repo, token, `Add or update landing page ${title}`);
+        if (response.ok) {
+          alert('تم رفع الصفحة بنجاح');
+          // create or update legal pages
+          await createLegalPagesIfNeeded(repo, token, document.getElementById('language-select').value);
+        } else {
+          const errorData = await response.json();
+          console.error(errorData);
+          alert('حدث خطأ أثناء رفع الصفحة: ' + (errorData.message || response.statusText));
+        }
+      });
+    })();
   </script>
 </body>
 </html>
